@@ -75,3 +75,8 @@ weil er keine Daten verändert, sondern nur die Darstellung.
   ein- statt zweispaltig, Filter volle Breite).
 - **TypeScript:** `TodoItem` als geteilter Typ, Props und Emits typbasiert deklariert,
   Filter als Union-Typ `'all' | 'open' | 'done'`.
+
+## Hinweis zur Verwendung von KI
+
+Das Tailwind-Theme in `src/assets/main.css` sowie diese Dokumentation sind mit
+Unterstützung von Claude Code (Anthropic) entstanden.

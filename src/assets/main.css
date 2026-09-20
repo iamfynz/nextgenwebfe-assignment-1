@@ -1,3 +1,11 @@
+/* ===============================================================
+   Design Tokens und Theming
+
+   Dieses Theme (Palette, semantische Tokens, Base- und
+   Component-Layer) wurde mit Unterstuetzung von Claude Code
+   (Anthropic) erstellt und anschliessend manuell angepasst.
+   =============================================================== */
+
 @import 'tailwindcss';
 
 /* ===============================================================
