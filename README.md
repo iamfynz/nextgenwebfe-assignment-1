@@ -52,54 +52,26 @@ src/
 └── composables/useTodos.ts     State und Persistenz
 ```
 
-## Decision Log
+## Komponentenstruktur
 
-### Warum diese Komponentenaufteilung
+`TodoApp.vue` ist die einzige Komponente, die Zustand besitzt — sie bindet `useTodos()`
+ein und gibt die Todos nach unten weiter. `TodoList.vue` rendert nur: Sie bekommt die
+Liste als Prop und meldet Änderungen als Events (`create:todo`, `toggle:accomplished`,
+`delete:todo`) nach oben, `TodoListItem.vue` kennt lediglich sein eigenes Todo.
+`CheckboxComponent.vue` und `SelectComponent.vue` kennen die Domäne gar nicht mehr und
+sind dadurch überall wiederverwendbar. So gibt es genau eine Stelle, an der sich der
+Zustand ändern kann. Einzige Ausnahme ist der aktive Filter: Er liegt in `TodoList.vue`,
+weil er keine Daten verändert, sondern nur die Darstellung.
 
-Die App ist entlang der Frage geschnitten, *wie viel eine Komponente wissen muss*.
-`TodoApp.vue` ist die einzige Komponente, die den Zustand besitzt: Sie bindet
-`useTodos()` ein und gibt die Todos nach unten weiter. `TodoList.vue` rendert nur —
-sie bekommt die Liste als Prop und meldet Absichten als Events (`create:todo`,
-`toggle:accomplished`, `delete:todo`) nach oben, ohne selbst etwas zu verändern.
-`TodoListItem.vue` kennt lediglich sein eigenes Todo, und `CheckboxComponent.vue`
-sowie `SelectComponent.vue` kennen die Domäne gar nicht mehr und wären in jedem
-anderen Projekt einsetzbar. Dadurch gibt es genau eine Stelle, an der sich der
-Zustand ändern kann, und die Bausteine darunter bleiben austauschbar.
+## Technische Notizen
 
-Eine Ausnahme ist bewusst gesetzt: Der aktive Filter lebt in `TodoList.vue`, nicht
-in `TodoApp.vue`. Er verändert keine Daten, sondern nur die Darstellung — und
-Zustand gehört dorthin, wo er gebraucht wird.
-
-### Persistenz im Composable
-
-`useTodos()` kapselt Laden, Ändern und Speichern an einem Ort. `TodoApp.vue` ruft
-`createTodoItem`, `removeTodo` und `checkTodoItem` auf und weiß nicht, dass dahinter
-ein `localStorage` steht — der Speicher ließe sich gegen ein Backend tauschen, ohne
-eine einzige Komponente anzufassen.
-
-### CSS Custom Properties und responsives Layout
-
-Farben, Schatten und Easing liegen als CSS Custom Properties in
-`src/assets/main.css`, in zwei Ebenen: zuerst die rohe Palette (`--color-brand-*`,
-`--color-ink-*`), darüber semantische Tokens wie `--color-surface`, `--color-fg-muted`
-oder `--color-line`. Die Komponenten verwenden ausschließlich die semantische Ebene —
-eine Komponente sagt `bg-surface`, nicht `bg-ink-50`. Eine Farbänderung ist dadurch ein
-Eingriff an einer Variable statt an jeder Komponente, die die Farbe benutzt.
-Wiederkehrende Muster liegen als Komponentenklassen im `@layer components`
-(`.btn`, `.btn-primary`, `.btn-danger`), damit ein Button nicht an jeder Stelle aus
-einem Dutzend Utilities neu zusammengesetzt wird.
-
-Das Layout ist mobil zuerst gedacht und wächst am `sm`-Breakpoint: schmalere
-Außenabstände am Telefon, das Anlege-Formular einspaltig statt zweispaltig, der Filter
-über die volle Breite statt rechtsbündig begrenzt. In der Todo-Zeile darf der Textblock
-schrumpfen (`min-w-0`), während Checkbox und Löschbutton ihre Größe behalten — sonst
-würden lange Titel die Bedienelemente aus der Karte drängen.
-
-### TypeScript
-
-`TodoItem` ist als eigener Typ in `types.ts` definiert und wird von Composable und
-Komponenten geteilt. Props und Emits sind durchgängig typbasiert deklariert
-(`defineProps<Props>()`, `defineEmits<Emits>()`), sodass falsche Aufrufe schon beim
-Typecheck auffallen. Der Filter nutzt einen Union-Typ `FilterValues = 'all' | 'open' |
-'done'` statt eines freien Strings, damit ein Tippfehler kein still ignorierter Zustand
-werden kann.
+- **Persistenz:** `useTodos()` kapselt Laden, Ändern und Speichern. Ein `watch` mit
+  `{ deep: true }` schreibt jede Änderung in den `localStorage` — die Komponenten wissen
+  nichts vom Speicher.
+- **Styling:** Farben liegen als CSS Custom Properties in `src/assets/main.css`, in zwei
+  Ebenen: rohe Palette (`--color-ink-*`) und semantische Tokens (`--color-surface`,
+  `--color-fg`). Komponenten nutzen nur die semantische Ebene.
+- **Responsive:** mobil zuerst, Anpassungen am `sm`-Breakpoint (Außenabstände, Formular
+  ein- statt zweispaltig, Filter volle Breite).
+- **TypeScript:** `TodoItem` als geteilter Typ, Props und Emits typbasiert deklariert,
+  Filter als Union-Typ `'all' | 'open' | 'done'`.
